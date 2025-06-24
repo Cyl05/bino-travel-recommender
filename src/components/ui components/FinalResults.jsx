@@ -1,14 +1,15 @@
-import { Box, Heading, Image, Text } from '@chakra-ui/react';
+import { Box, FormatByte, Heading, Image, Text } from '@chakra-ui/react';
 import React from 'react';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const FinalResults = (props) => {
-    const [place, setPlace] = React.useState();
+    const [place, setPlace] = React.useState(null);
+    const [loading, setLoading] = React.useState(true);
+    const [error, setError] = React.useState(null);
+    const [image, setImage] = React.useState(null);
 
-    let output = null;
+    const genAI = new GoogleGenerativeAI(import.meta.env.VITE_API_KEY);
 
-    const genAI = new GoogleGenerativeAI(import.meta.env.API_KEY);
-    console.log(import.meta.env.API_KEY);
     async function getTravelDestinations({ budget, activities, climate, travellingSize }) {
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
@@ -19,65 +20,139 @@ const FinalResults = (props) => {
             - Climate preference: ${climate}
             - Travelling group size: ${travellingSize}
 
-            Suggest 1 travel destinations in India. Suggestion should be concise and in this exact JSON format:
+            Suggest 1 travel destination in India. Suggestion should be concise and in this exact JSON format:
 
             [
             {
                 "place": "Place Name",
-                "description": "Brief description of the place and why it's suitable"
-            },
-            ...
+                "description": "Brief description of the place and why it's suitable",
+                "imageUrl": "https://example.com/image.jpg"
+            }
             ]
 
             Only output the JSON, no extra text.
         `;
 
-        const result = await model.generateContent(prompt);
-        let text = result.response.text();
+        try {
+            const result = await model.generateContent(prompt);
+            let text = result.response.text();
 
-        text = text.replace("```json", "");
-        text = text.replace("```", "");
+            text = text.replace("```json", "");
+            text = text.replace("```", "");
 
-        const finalOutput = JSON.parse(text);
-        return finalOutput;
+            const finalOutput = JSON.parse(text);
+            return finalOutput[0];
+        } catch (error) {
+            console.error('Error generating content:', error);
+            throw error;
+        }
     }
-
-    const fetchDestination = async () => {
-        output = await getTravelDestinations({
-            budget: props.answers[0],
-            activities: props.answers[1],
-            climate: props.answers[2],
-            travellingSize: props.answers[3],
-        });
-    }
-    fetchDestination();
-    console.log(output);
-
 
     React.useEffect(() => {
-        console.log(place);
-    }, [place]);
-    return (
-        <Box
-            w={"50%"}
-            h={"50vh"}
-            bgColor={"white"}
-            color={"black"}
-            textAlign={"center"}
-            borderRadius={20}
-            display={"flex"}
-            alignItems={"center"}
-            gap={10}
-            justifyContent={"center"}
-            p={4}
-        >
-            <Image src="https://images.unsplash.com/photo-1541077250662-c9cf17e37dde?ixid=M3w3NjgzNzB8MHwxfHNlYXJjaHwxfHxrb2glMjBsYW50YSUyMHRoYWlsYW5kfGVufDB8fHx8MTc1MDc2NzgwNHww&ixlib=rb-4.1.0" height={'50%'} border={'2px solid black'} borderRadius={10} />
-            <Box w={'50%'}>
-                <Heading>Koh Lanta, Thailand</Heading>
-                <Text>Offers a blend of tropical beaches, affordable prices, and opportunities for kayaking, rock climbing, and island hopping, perfect for solo adventure within the budget.</Text>
+        const fetchDestination = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+
+                if (!import.meta.env.VITE_API_KEY) {
+                    throw new Error('API key not found. Make sure VITE_API_KEY is set in your .env file');
+                }
+
+                const destination = await getTravelDestinations({
+                    budget: props.answers[0],
+                    activities: props.answers[1],
+                    climate: props.answers[2],
+                    travellingSize: props.answers[3],
+                });
+
+                setPlace(destination);
+
+                let formattedText = destination.place;
+                formattedText = formattedText.replaceAll(" ", "%20");
+
+                console.log(formattedText);
+
+                const response = await fetch(`https://api.unsplash.com/search/photos?page=1&query=${formattedText}&per_page=1&client_id=qz-3ke-GyYkeH41ixfd-FYJRLF6kikkPfzsMGp-x2wQ`)
+                const responseJSON = await response.json();
+                setImage(responseJSON.results[0].urls.raw);
+            } catch (err) {
+                setError(err.message);
+                console.error('Error:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDestination();
+    }, [props.answers]);
+
+    if (loading) {
+        return (
+            <Box
+                w={"50%"}
+                h={"50vh"}
+                bgColor={"white"}
+                color={"black"}
+                textAlign={"center"}
+                borderRadius={20}
+                display={"flex"}
+                alignItems={"center"}
+                justifyContent={"center"}
+                p={4}
+            >
+                <Text fontSize="xl">Finding your perfect destination...</Text>
             </Box>
-        </Box>
-    )
+        );
+    }
+
+    if (error) {
+        return (
+            <Box
+                w={"50%"}
+                h={"50vh"}
+                bgColor={"white"}
+                color={"red"}
+                textAlign={"center"}
+                borderRadius={20}
+                display={"flex"}
+                alignItems={"center"}
+                justifyContent={"center"}
+                p={4}
+            >
+                <Text fontSize="xl">Error: {error}</Text>
+            </Box>
+        );
+    }
+
+    return (
+        <>
+            <Box
+                w={"50%"}
+                h={"30vh"}
+                bgColor={"white"}
+                color={"black"}
+                textAlign={"center"}
+                borderRadius={20}
+                display={"flex"}
+                alignItems={"center"}
+                gap={10}
+                justifyContent={"center"}
+                p={4}
+            >
+                <Image
+                    src={image}
+                    height={'90%'}
+                    border={'2px solid black'}
+                    borderRadius={10}
+                    objectFit="cover"
+                />
+                <Box w={'50%'}>
+                    <Heading>{place?.place || 'Your Destination'}</Heading>
+                    <Text>{place?.description || 'A wonderful place to visit!'}</Text>
+                </Box>
+            </Box>
+        </>
+    );
 }
 
 export default FinalResults;
