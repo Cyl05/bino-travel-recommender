@@ -1,4 +1,4 @@
-import { Box, FormatByte, Heading, Image, Text } from '@chakra-ui/react';
+import { Box, FormatByte, Heading, Image, Text, VStack } from '@chakra-ui/react';
 import React from 'react';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
@@ -139,6 +139,13 @@ const FinalResults = (props) => {
                 gap={10}
                 justifyContent={"center"}
                 p={4}
+                bg="rgba(255, 255, 255, 0.8)"
+                backdropFilter="blur(10px)"
+                border="1px solid rgba(255, 255, 255, 0.7)"
+                transition="transform 0.3s ease-in-out"
+                _hover={{
+                    transform: "scale(1.05)",
+                }}
             >
                 <Image
                     src={image}
@@ -164,8 +171,18 @@ const FinalResults = (props) => {
                 gap={10}
                 justifyContent={"center"}
                 p={4}
+                bg="rgba(255, 255, 255, 0.8)"
+                backdropFilter="blur(10px)"
+                border="1px solid rgba(255, 255, 255, 0.7)"
+                transition="transform 0.3s ease-in-out"
+                _hover={{
+                    transform: "scale(1.05)",
+                }}
             >
-                <Heading>Chat with Bino now to plan this trip!</Heading>
+                <VStack>
+                    <Heading>Chat with Bino now to plan this trip!</Heading>
+                    <a href={'https://bino.bot/'}><Text>https://bino.bot/</Text></a>
+                </VStack>
                 <Image height={'90%'} src={qrUrl} />
             </Box>
         </>
