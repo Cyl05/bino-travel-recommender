@@ -9,13 +9,16 @@ const Questions = () => {
         ["What is your preferred climate?", "Tropical", "Cool", "Snowy", "Doesn't matter"],
         ["Who are you traveling with?", "Solo", "Partner", "Friends", "Family"]
     ];
-    const answers = [];
+    const [answers, setAnswers] = React.useState([]);
 
     const handleClick = (num) => {
-        answers.push(questions[counter][num]);
+        setAnswers((prev) => [...prev, questions[counter][num]]);
         setCounter((prev) => prev + 1);
-        console.log(answers);
     }
+
+    React.useEffect(() => {
+        console.log("Updated answers:", answers);
+    }, [answers]);
 
     return (
         <>
