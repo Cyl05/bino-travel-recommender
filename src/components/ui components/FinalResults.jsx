@@ -71,7 +71,7 @@ const FinalResults = (props) => {
                 let formattedText = destination.place;
                 formattedText = formattedText.replaceAll(" ", "%20");
 
-                const response = await fetch(`https://api.unsplash.com/search/photos?page=1&query=${formattedText}&per_page=1&client_id=qz-3ke-GyYkeH41ixfd-FYJRLF6kikkPfzsMGp-x2wQ`)
+                const response = await fetch(`https://api.unsplash.com/search/photos?page=1&query=${formattedText}&per_page=1&client_id=${import.meta.env.VITE_UNSPLASH_API_KEY}`);
                 const responseJSON = await response.json();
                 setImage(responseJSON.results[0].urls.raw);
 
