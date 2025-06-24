@@ -7,6 +7,7 @@ const FinalResults = (props) => {
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState(null);
     const [image, setImage] = React.useState(null);
+    const [qrUrl, setQrUrl] = React.useState(null);
 
     const genAI = new GoogleGenerativeAI(import.meta.env.VITE_API_KEY);
 
@@ -70,11 +71,11 @@ const FinalResults = (props) => {
                 let formattedText = destination.place;
                 formattedText = formattedText.replaceAll(" ", "%20");
 
-                console.log(formattedText);
-
                 const response = await fetch(`https://api.unsplash.com/search/photos?page=1&query=${formattedText}&per_page=1&client_id=qz-3ke-GyYkeH41ixfd-FYJRLF6kikkPfzsMGp-x2wQ`)
                 const responseJSON = await response.json();
                 setImage(responseJSON.results[0].urls.raw);
+
+                setQrUrl(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://wa.me/919800081110?text=Help%20me%20plan%20a%20trip%20to%20${formattedText}`);
             } catch (err) {
                 setError(err.message);
                 console.error('Error:', err);
@@ -150,6 +151,22 @@ const FinalResults = (props) => {
                     <Heading>{place?.place || 'Your Destination'}</Heading>
                     <Text>{place?.description || 'A wonderful place to visit!'}</Text>
                 </Box>
+            </Box>
+            <Box
+                w={"50%"}
+                h={"30vh"}
+                bgColor={"white"}
+                color={"black"}
+                textAlign={"center"}
+                borderRadius={20}
+                display={"flex"}
+                alignItems={"center"}
+                gap={10}
+                justifyContent={"center"}
+                p={4}
+            >
+                <Heading>Chat with Bino now to plan this trip!</Heading>
+                <Image height={'90%'} src={qrUrl} />
             </Box>
         </>
     );
